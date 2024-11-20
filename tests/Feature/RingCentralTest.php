@@ -2,12 +2,14 @@
 
 namespace Coxlr\Ringcentral\Tests\Feature;
 
+use Coxlr\RingCentral\Exceptions\CouldNotSendMessage;
 use Coxlr\RingCentral\RingCentral;
 use Coxlr\RingCentral\Tests\TestCase;
 use Dotenv\Dotenv;
+use RingCentral\SDK\Http\ApiException;
 
-class RingCentralAdminTest extends TestCase {
-    protected RingCentral|Coxlr\RingCentral\RingCentral $ringCentral;
+class RingCentralTest extends TestCase {
+    protected RingCentral $ringCentral;
 
     protected function setUp(): void {
         parent::setUp();
@@ -20,9 +22,7 @@ class RingCentralAdminTest extends TestCase {
             ->setClientId(env('RINGCENTRAL_CLIENT_ID'))
             ->setClientSecret(env('RINGCENTRAL_CLIENT_SECRET'))
             ->setServerUrl(env('RINGCENTRAL_SERVER_URL'))
-            ->setUsername(env('RINGCENTRAL_USERNAME'))
-            ->setOperatorToken(env('RINGCENTRAL_OPERATOR_TOKEN'))
-            ->setAdminToken(env('RINGCENTRAL_ADMIN_TOKEN'));
+            ->setToken(env('RINGCENTRAL_TOKEN'));
 
         $this->delay();
     }
@@ -48,16 +48,35 @@ class RingCentralAdminTest extends TestCase {
     }
 
     /** @test */
-    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_previous_24_hours(): void {
-        $this->ringCentral->authenticateOperator();
-        $operatorExtensionId = $this->ringCentral->loggedInExtensionId();
+    public function it_can_send_an_sms_message(): void {
+        $result = $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
+            'to' => env('RINGCENTRAL_RECEIVER'),
+            'text' => 'Test Message',
+        ]);
 
-        $result = $this->ringCentral->getMessagesForExtensionId($operatorExtensionId);
+        $this->assertEquals(
+            env('RINGCENTRAL_IS_SANDBOX')
+                ? 'Test SMS using a RingCentral Developer account - Test Message'
+                : 'Test Message',
+            $result->json()->subject
+        );
+
+        $this->assertEquals(env('RINGCENTRAL_RECEIVER'), $result->json()->to[0]->phoneNumber);
+        $this->assertEquals(env('RINGCENTRAL_SENDER'), $result->json()->from->phoneNumber);
+    }
+
+    /** @test */
+    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_previous_24_hours(): void {
+        $this->ringCentral->authenticate();
+        $extensionId = $this->ringCentral->loggedInExtensionId();
+
+        $result = $this->ringCentral->getMessagesForExtensionId($extensionId);
 
         $firstMessage = (array) $result[0];
 
         $uriParts = explode('/', $firstMessage['uri']);
-        $this->assertEquals($operatorExtensionId, $uriParts[8]);
+        $this->assertEquals($extensionId, $uriParts[8]);
 
         $this->assertArrayHasKey('id', $firstMessage);
         $this->assertArrayHasKey('to', $firstMessage);
@@ -67,18 +86,9 @@ class RingCentralAdminTest extends TestCase {
     }
 
     /** @test */
-    public function it_logs_in_the_admin_account_if_different_from_the_admin_account_when_retrieving_sms_messages_for_a_given_extension(): void {
-        $this->ringCentral->authenticateOperator();
-        $operatorExtensionId = $this->ringCentral->loggedInExtensionId();
-
-        $this->ringCentral->getMessagesForExtensionId($operatorExtensionId);
-
-        $this->assertNotEquals($operatorExtensionId, $this->ringCentral->loggedInExtensionId());
-    }
-
-    /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date(): void {
         $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
         ]);
@@ -107,6 +117,7 @@ class RingCentralAdminTest extends TestCase {
     /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date_to_a_set_date(): void {
         $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
         ]);
@@ -137,11 +148,13 @@ class RingCentralAdminTest extends TestCase {
     /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_with_per_page_limit_set(): void {
         $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
         ]);
 
         $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
         ]);
@@ -172,6 +185,7 @@ class RingCentralAdminTest extends TestCase {
     /** @test */
     public function it_can_retrieve_an_sms_messages_attachement(): void {
         $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
         ]);
@@ -194,5 +208,46 @@ class RingCentralAdminTest extends TestCase {
         );
 
         $this->assertNotNull($attachment->raw());
+    }
+
+    /** @test */
+    public function it_requires_a_from_number_to_send_an_sms_message(): void {
+        $this->expectException(CouldNotSendMessage::class);
+
+        $this->ringCentral->sendMessage([
+            'to' => env('RINGCENTRAL_RECEIVER'),
+            'text' => 'Test Message',
+        ]);
+    }
+
+    /** @test */
+    public function it_requires_a_to_number_to_send_an_sms_message(): void {
+        $this->expectException(CouldNotSendMessage::class);
+
+        $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
+            'text' => 'Test Message',
+        ]);
+    }
+
+    /** @test */
+    public function it_requires_a_to_message_to_send_an_sms_message(): void {
+        $this->expectException(CouldNotSendMessage::class);
+
+        $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
+            'to' => env('RINGCENTRAL_RECEIVER'),
+        ]);
+    }
+
+    /** @test */
+    public function an_exception_is_thrown_if_message_not_sent(): void {
+        $this->expectException(ApiException::class);
+
+        $this->ringCentral->sendMessage([
+            'from' => env('RINGCENTRAL_SENDER'),
+            'to' => 123,
+            'text' => 'Test Message',
+        ]);
     }
 }
