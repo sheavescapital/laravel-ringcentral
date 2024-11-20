@@ -32,10 +32,6 @@ Then update `config/ringcentral.php` with your credentials. Alternatively, you c
 RINGCENTRAL_CLIENT_ID=my_client_id
 RINGCENTRAL_CLIENT_SECRET=my_client_secret
 RINGCENTRAL_SERVER_URL=my_server_url
-RINGCENTRAL_USERNAME=my_username
-RINGCENTRAL_OPERATOR_TOKEN=my_operator_jwt
-
-#If admin details are a different extension to the operator
 RINGCENTRAL_ADMIN_TOKEN=my_admin_jwt
 ```
 This package uses the JWT autentication method. You can learn more about setting up JWT for your RingCentral account [here](https://developers.ringcentral.com/guide/authentication/jwt/quick-start).
@@ -44,10 +40,11 @@ This package uses the JWT autentication method. You can learn more about setting
 
 To use the RingCentral Client Library you can use the facade, or request the instance from the service container.
 
-### Sending an SMS message (requires login in extension to be company operator)
+### Sending an SMS message
 
 ```php
 RingCentral::sendMessage([
+    'from' => '18042221111',
     'to'   => '18042221111',
     'text' => 'Using the facade to send a message.'
 ]);
@@ -72,7 +69,7 @@ $ringcentral->sendMessage([
 | to        | true      | String     |             | The number to send the message to, must include country code |
 | text        | true      | String   |             | The text of the message to send |
 
-### Retrieving Extensions (requires admin access)
+### Retrieving Extensions
 
 ```php
 RingCentral::getExtensions();
@@ -86,35 +83,7 @@ $ringcentral = app('ringcentral');
 $ringcentral->getExtensions();
 ```
 
-### Get messages sent and received for the operator
-
-```php
-RingCentral::getOperatorMessages();
-```
-
-Or
-
-```php
-$ringcentral = app('ringcentral');
-
-$ringcentral->getOperatorMessages();
-```
-
-The default from date is the previous 24 hours, to specify the date to search from pass the require date as a parameter.
-
-```php
-RingCentral::getOperatorMessages((new \DateTime())->modify('-1 hours'));
-```
-
-#### Parameters
-
-| Name      | Required | Type          | Default     | Description |
-| ---       | ---      | ---           | ---         | ---         |
-| fromDate  | false    | Object      |             | The date and time to start the search from must be a PHP date object |
-| toDate  | false    | Object      |             | The date and time to end the search must be a PHP date object |
-| perPage  | false    | Int      |  100           | The number of records to return per page |
-
-### Get messages sent and received for a given extension (Needs admin access)
+### Get messages sent and received for a given extension
 
 ```php
 RingCentral::getMessagesForExtensionId(12345678);
@@ -144,7 +113,7 @@ RingCentral::getMessagesForExtensionId(12345678, (new \DateTime())->modify('-1 h
 | perPage  | false    | Int      |  100           | The number of records to return per page |
 
 
-### Get a messages attachment (requires admin access)
+### Get a messages attachment
 
 ```php
 RingCentral::getMessageAttachmentById(12345678, 910111213, 45678910);

@@ -48,20 +48,10 @@ class RingCentralServiceProvider extends ServiceProvider {
             $this->raiseRunTimeException('Missing server_url.');
         }
 
-        if ($this->ringCentralConfigHasNo('username')) {
-            $this->raiseRunTimeException('Missing username.');
-        }
-
-        if ($this->ringCentralConfigHasNo('operator_token')) {
-            $this->raiseRunTimeException('Missing operator token.');
-        }
-
         $ringCentral = (new RingCentral)
             ->setClientId(config('ringcentral.client_id'))
             ->setClientSecret(config('ringcentral.client_secret'))
-            ->setServerUrl(config('ringcentral.server_url'))
-            ->setUsername(config('ringcentral.username'))
-            ->setOperatorToken(config('ringcentral.operator_token'));
+            ->setServerUrl(config('ringcentral.server_url'));
 
         if ($this->ringCentralConfigHas('admin_token')) {
             $ringCentral->setAdminToken(config('ringcentral.admin_token'));

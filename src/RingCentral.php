@@ -14,12 +14,9 @@ class RingCentral {
     protected string $serverUrl;
     protected string $clientId;
     protected string $clientSecret;
-    protected string $username;
-    protected ?string $operatorExtension = null;
     protected ?string $adminExtension = null;
     protected string $loggedInExtension;
     protected string $loggedInExtensionId;
-    protected string $operatorToken;
     protected ?string $adminToken = null;
 
     public function setClientId(string $clientId): static {
@@ -36,18 +33,6 @@ class RingCentral {
 
     public function setServerUrl(string $serverUrl): static {
         $this->serverUrl = $serverUrl;
-
-        return $this;
-    }
-
-    public function setUsername(string $username): static {
-        $this->username = $username;
-
-        return $this;
-    }
-
-    public function setOperatorToken(string $operatorToken): static {
-        $this->operatorToken = $operatorToken;
 
         return $this;
     }
@@ -70,38 +55,16 @@ class RingCentral {
         return $this->serverUrl;
     }
 
-    public function username(): string {
-        return $this->username;
-    }
-
-    public function operatorExtension(): ?string {
-        return $this->operatorExtension;
-    }
-
-    public function operatorToken(): string {
-        return $this->operatorToken;
-    }
-
     public function adminExtension(): ?string {
-        return $this->adminExtension ?: $this->operatorExtension;
+        return $this->adminExtension;
     }
 
     public function adminToken(): string {
-        return $this->adminToken ?: $this->operatorToken;
+        return $this->adminToken;
     }
 
     public function connect(): void {
         $this->ringCentral = (new SDK($this->clientId(), $this->clientSecret(), $this->serverUrl()))->platform();
-    }
-
-    public function loginOperator(): void {
-        $this->login($this->operatorToken());
-
-        $this->setOperatorExtension($this->loggedInExtension());
-    }
-
-    public function setOperatorExtension(string $operatorExtension): void {
-        $this->operatorExtension = $operatorExtension;
     }
 
     public function loginAdmin(): void {
@@ -132,33 +95,6 @@ class RingCentral {
 
     public function loggedInExtension(): string {
         return $this->loggedInExtension;
-    }
-
-    /**
-     * @throws CouldNotAuthenticate
-     */
-    public function authenticateOperator(): bool {
-        if (! $this->ringCentral) {
-            $this->connect();
-        }
-
-        if (! $this->operatorLoggedIn()) {
-            $this->loginOperator();
-        }
-
-        if (! $this->ringCentral->loggedIn()) {
-            throw CouldNotAuthenticate::operatorLoginFailed();
-        }
-
-        return true;
-    }
-
-    public function operatorLoggedIn(): bool {
-        if ($this->ringCentral->loggedIn()) {
-            return $this->loggedInExtension() === $this->operatorExtension();
-        }
-
-        return false;
     }
 
     /**
@@ -197,6 +133,10 @@ class RingCentral {
      * @throws ApiException
      */
     public function sendMessage(array $message): ApiResponse {
+        if (empty($message['from'])) {
+            throw CouldNotSendMessage::toNumberNotProvided();
+        }
+
         if (empty($message['to'])) {
             throw CouldNotSendMessage::toNumberNotProvided();
         }
@@ -205,10 +145,10 @@ class RingCentral {
             throw CouldNotSendMessage::textNotProvided();
         }
 
-        $this->authenticateOperator();
+        $this->authenticateAdmin();
 
         return $this->ringCentral->post('/account/~/extension/~/sms', [
-            'from' => ['phoneNumber' => $this->username()],
+            'from' => ['phoneNumber' => $message['from']],
             'to' => [
                 ['phoneNumber' => $message['to']],
             ],
@@ -251,16 +191,6 @@ class RingCentral {
         ));
 
         return $r->json()->records;
-    }
-
-    /**
-     * @throws ApiException
-     * @throws CouldNotAuthenticate
-     */
-    public function getOperatorMessages(?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
-        $this->authenticateOperator();
-
-        return $this->getMessages('~', $fromDate, $toDate, $perPage);
     }
 
     /**
