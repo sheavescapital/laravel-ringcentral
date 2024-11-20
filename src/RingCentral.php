@@ -155,7 +155,7 @@ class RingCentral {
     /**
      * @throws ApiException
      */
-    public function getMessages(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
+    protected function getMessages(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
         $dates = [];
 
         if ($fromDate) {
@@ -191,9 +191,124 @@ class RingCentral {
      * @throws CouldNotAuthenticate
      * @throws ApiException
      */
+    public function getPhoneNumbers(): array {
+        $this->authenticate();
+
+        return $this->ringCentral->get('/account/~/phone-number')->json()->records;
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
     public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): ApiResponse {
         $this->authenticate();
 
         return $this->ringCentral->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
+    public function getCallLogs(?object $fromDate = null, ?object $toDate = null, ?bool $withRecording = true, ?int $perPage = 100) {
+        $this->authenticate();
+
+        $dates = [];
+
+        if ($fromDate) {
+            $dates['dateFrom'] = $fromDate->format('c');
+        }
+
+        if ($toDate) {
+            $dates['dateTo'] = $toDate->format('c');
+        }
+
+        $r = $this->ringCentral->get('/account/~/call-log', array_merge(
+            [
+                'type' => 'Voice',
+                'withRecording' => $withRecording,
+                'perPage' => $perPage,
+            ],
+            $dates
+        ));
+
+        return $r->json()->records;
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
+    public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?bool $withRecording = true, ?int $perPage = 100) {
+        $this->authenticate();
+
+        $dates = [];
+
+        if ($fromDate) {
+            $dates['dateFrom'] = $fromDate->format('c');
+        }
+
+        if ($toDate) {
+            $dates['dateTo'] = $toDate->format('c');
+        }
+
+        $r = $this->ringCentral->get('/account/~/extension/'.$extensionId.'/call-log', array_merge(
+            [
+                'type' => 'Voice',
+                'withRecording' => $withRecording,
+                'perPage' => $perPage,
+            ],
+            $dates
+        ));
+
+        return $r->json()->records;
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
+    public function getRecordingById(string $recordingId): ApiResponse {
+        $this->authenticate();
+
+        return $this->ringCentral->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content");
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
+    public function listWebhooks(): array {
+        $this->authenticate();
+
+        return $this->ringCentral->get('/subscription')->json()->records;
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
+    public function createWebhook(array $filters, int $expiresIn, ?string $address, ?string $verificationToken): ApiResponse {
+        $this->authenticate();
+
+        return $this->ringCentral->post('/subscription', [
+            'eventFilters' => $filters,
+            'expiresIn' => $expiresIn,
+            'deliveryMode' => [
+                'transportType' => 'WebHook',
+                'address' => $address,
+            ],
+        ]);
+    }
+
+    /**
+     * @throws CouldNotAuthenticate
+     * @throws ApiException
+     */
+    public function deleteWebhook(string $webhookId): ApiResponse {
+        $this->authenticate();
+
+        return $this->ringCentral->delete("/subscription/{$webhookId}");
     }
 }
