@@ -32,7 +32,7 @@ Then update `config/ringcentral.php` with your credentials. Alternatively, you c
 RINGCENTRAL_CLIENT_ID=my_client_id
 RINGCENTRAL_CLIENT_SECRET=my_client_secret
 RINGCENTRAL_SERVER_URL=my_server_url
-RINGCENTRAL_ADMIN_TOKEN=my_admin_jwt
+RINGCENTRAL_TOKEN=my_jwt
 ```
 This package uses the JWT autentication method. You can learn more about setting up JWT for your RingCentral account [here](https://developers.ringcentral.com/guide/authentication/jwt/quick-start).
 

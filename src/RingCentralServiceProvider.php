@@ -53,8 +53,8 @@ class RingCentralServiceProvider extends ServiceProvider {
             ->setClientSecret(config('ringcentral.client_secret'))
             ->setServerUrl(config('ringcentral.server_url'));
 
-        if ($this->ringCentralConfigHas('admin_token')) {
-            $ringCentral->setAdminToken(config('ringcentral.admin_token'));
+        if ($this->ringCentralConfigHas('token')) {
+            $ringCentral->setToken(config('ringcentral.token'));
         }
 
         return $ringCentral;
