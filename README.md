@@ -1,11 +1,9 @@
 # A Laravel package for the RingCentral SDK for PHP
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/coxlr/laravel-ringcentral.svg?style=flat-square)](https://packagist.org/packages/coxlr/laravel-ringcentral)
-[![Tests](https://github.com/coxlr/laravel-ringcentral/actions/workflows/run-tests.yml/badge.svg)](https://github.com/coxlr/laravel-ringcentral/actions/workflows/run-tests.yml)
-[![Total Downloads](https://img.shields.io/packagist/dt/coxlr/laravel-ringcentral.svg?style=flat-square)](https://packagist.org/packages/coxlr/laravel-ringcentral)
-
 
 This is a simple Laravel Service Provider providing access to the [RingCentral SDK for PHP][client-library].
+
+Forked from [https://github.com/coxlr/laravel-ringcentral](https://github.com/coxlr/laravel-ringcentral), Created by [Lee Cox](https://github.com/coxlr)
 
 ## Installation
 
@@ -159,22 +157,6 @@ An optional environment value can be set to prevent hitting RingCentral rate lim
 RINGCENTRAL_DELAY_REQUEST_SECONDS=20
 ```
 
-
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
-
-## Security
-
-If you discover any security related issues, please email hey@leecox.me instead of using the issue tracker.
-
-## Credits
-
-- [Lee Cox](https://github.com/coxlr)
 
 ## License
 
