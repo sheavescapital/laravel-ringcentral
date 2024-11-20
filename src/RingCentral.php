@@ -14,10 +14,9 @@ class RingCentral {
     protected string $serverUrl;
     protected string $clientId;
     protected string $clientSecret;
-    protected ?string $adminExtension = null;
     protected string $loggedInExtension;
     protected string $loggedInExtensionId;
-    protected ?string $adminToken = null;
+    protected ?string $token = null;
 
     public function setClientId(string $clientId): static {
         $this->clientId = $clientId;
@@ -37,8 +36,8 @@ class RingCentral {
         return $this;
     }
 
-    public function setAdminToken(string $adminToken): static {
-        $this->adminToken = $adminToken;
+    public function setToken(string $token): static {
+        $this->token = $token;
 
         return $this;
     }
@@ -55,31 +54,16 @@ class RingCentral {
         return $this->serverUrl;
     }
 
-    public function adminExtension(): ?string {
-        return $this->adminExtension;
-    }
-
-    public function adminToken(): string {
-        return $this->adminToken;
+    public function token(): string {
+        return $this->token;
     }
 
     public function connect(): void {
         $this->ringCentral = (new SDK($this->clientId(), $this->clientSecret(), $this->serverUrl()))->platform();
     }
 
-    public function loginAdmin(): void {
-        $this->login($this->adminToken());
-
-        $this->setAdminExtension($this->loggedInExtension());
-    }
-
-    public function setAdminExtension(string $adminExtension): void {
-        $this->adminExtension = $adminExtension;
-    }
-
-    public function login(string $token): void {
-        $this->ringCentral->login(['jwt' => $token]);
-
+    public function login(): void {
+        $this->ringCentral->login(['jwt' => $this->Token()]);
         $this->setLoggedInExtension();
     }
 
@@ -100,17 +84,17 @@ class RingCentral {
     /**
      * @throws CouldNotAuthenticate
      */
-    public function authenticateAdmin(): bool {
+    public function authenticate(): bool {
         if (! $this->ringCentral) {
             $this->connect();
         }
 
-        if (! $this->adminLoggedIn()) {
-            $this->loginAdmin();
+        if (! $this->loggedIn()) {
+            $this->login();
         }
 
         if (! $this->ringCentral->loggedIn()) {
-            throw CouldNotAuthenticate::adminLoginFailed();
+            throw CouldNotAuthenticate::loginFailed();
         }
 
         return true;
@@ -119,7 +103,7 @@ class RingCentral {
     /**
      * @throws ApiException
      */
-    public function adminLoggedIn(): bool {
+    public function loggedIn(): bool {
         if ($this->ringCentral->loggedIn()) {
             return $this->ringCentral->get('/account/~/extension/~/')->json()->permissions->admin->enabled ?? false;
         }
@@ -145,7 +129,7 @@ class RingCentral {
             throw CouldNotSendMessage::textNotProvided();
         }
 
-        $this->authenticateAdmin();
+        $this->authenticate();
 
         return $this->ringCentral->post('/account/~/extension/~/sms', [
             'from' => ['phoneNumber' => $message['from']],
@@ -161,7 +145,7 @@ class RingCentral {
      * @throws ApiException
      */
     public function getExtensions(): array {
-        $this->authenticateAdmin();
+        $this->authenticate();
 
         $r = $this->ringCentral->get('/account/~/extension');
 
@@ -198,7 +182,7 @@ class RingCentral {
      * @throws ApiException
      */
     public function getMessagesForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
-        $this->authenticateAdmin();
+        $this->authenticate();
 
         return $this->getMessages($extensionId, $fromDate, $toDate, $perPage);
     }
@@ -208,7 +192,7 @@ class RingCentral {
      * @throws ApiException
      */
     public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): ApiResponse {
-        $this->authenticateAdmin();
+        $this->authenticate();
 
         return $this->ringCentral->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
     }
