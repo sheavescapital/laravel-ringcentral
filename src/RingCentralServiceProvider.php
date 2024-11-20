@@ -7,25 +7,22 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Support\ServiceProvider;
 use RuntimeException;
 
-class RingCentralServiceProvider extends ServiceProvider
-{
-    public function boot(): void
-    {
+class RingCentralServiceProvider extends ServiceProvider {
+    public function boot(): void {
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__ . '/../config/ringcentral.php' => config_path('ringcentral.php'),
+                __DIR__.'/../config/ringcentral.php' => config_path('ringcentral.php'),
             ], 'config');
         }
     }
 
-    public function register(): void
-    {
+    public function register(): void {
         // Bind RingCentral Client in Service Container.
         $this->app->singleton('ringcentral', function () {
             return $this->createRingCentralClient();
         });
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/ringcentral.php', 'ringcentral');
+        $this->mergeConfigFrom(__DIR__.'/../config/ringcentral.php', 'ringcentral');
     }
 
     /**
@@ -33,8 +30,7 @@ class RingCentralServiceProvider extends ServiceProvider
      *
      * @throws BindingResolutionException
      */
-    protected function createRingCentralClient(): RingCentral
-    {
+    protected function createRingCentralClient(): RingCentral {
         // Check for RingCentral config file.
         if (! $this->hasRingCentralConfigSection()) {
             $this->raiseRunTimeException('Missing RingCentral configuration.');
@@ -60,7 +56,7 @@ class RingCentralServiceProvider extends ServiceProvider
             $this->raiseRunTimeException('Missing operator token.');
         }
 
-        $ringCentral = (new RingCentral())
+        $ringCentral = (new RingCentral)
             ->setClientId(config('ringcentral.client_id'))
             ->setClientSecret(config('ringcentral.client_secret'))
             ->setServerUrl(config('ringcentral.server_url'))
@@ -79,8 +75,7 @@ class RingCentralServiceProvider extends ServiceProvider
      *
      * @throws BindingResolutionException
      */
-    protected function hasRingCentralConfigSection(): bool
-    {
+    protected function hasRingCentralConfigSection(): bool {
         return $this->app->make(Config::class)
             ->has('ringcentral');
     }
@@ -91,8 +86,7 @@ class RingCentralServiceProvider extends ServiceProvider
      *
      * @throws BindingResolutionException
      */
-    protected function ringCentralConfigHasNo(string $key): bool
-    {
+    protected function ringCentralConfigHasNo(string $key): bool {
         return ! $this->ringCentralConfigHas($key);
     }
 
@@ -101,8 +95,7 @@ class RingCentralServiceProvider extends ServiceProvider
      *
      * @throws BindingResolutionException
      */
-    protected function ringCentralConfigHas(string $key): bool
-    {
+    protected function ringCentralConfigHas(string $key): bool {
         /** @var Config $config */
         $config = $this->app->make(Config::class);
 
@@ -117,14 +110,12 @@ class RingCentralServiceProvider extends ServiceProvider
             ! empty($config->get('ringcentral.'.$key));
     }
 
-
     /**
      * Raises Runtime exception.
      *
      * @throws RuntimeException
      */
-    protected function raiseRunTimeException(string $message): void
-    {
+    protected function raiseRunTimeException(string $message): void {
         throw new RuntimeException($message);
     }
 }
