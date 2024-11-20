@@ -1,5 +1,5 @@
 {
-    "name": "coxlr/laravel-ringcentral",
+    "name": "sheavescapital/laravel-ringcentral",
     "description": "A Laravel package for the RingCentral SDK for PHP",
     "keywords": [
         "coxlr",
