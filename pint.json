@@ -1,0 +1,39 @@
+{
+    "preset": "laravel",
+    "rules": {
+        "curly_braces_position": {
+            "classes_opening_brace": "same_line",
+            "functions_opening_brace": "same_line"
+        },
+        "blank_line_before_statement": {
+            "statements": []
+        },
+        "no_extra_blank_lines": {
+            "tokens": [
+                "attribute",
+                "break",
+                "case",
+                "continue",
+                "curly_brace_block",
+                "default",
+                "extra",
+                "parenthesis_brace_block",
+                "return",
+                "square_brace_block",
+                "switch",
+                "throw",
+                "use",
+                "use_trait"
+            ]
+        },
+        "class_attributes_separation": {
+            "elements": {
+                "const": "only_if_meta",
+                "method": "one",
+                "property": "only_if_meta",
+                "trait_import": "only_if_meta",
+                "case": "none"
+            }
+        }
+    }
+}

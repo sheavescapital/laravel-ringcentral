@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Application Credentials
@@ -11,7 +10,7 @@ return [
     | https://developers.ringcentral.com | 'Credentials - Application Credentials'.
     |
     */
-    'client_id'    => function_exists('env') ? env('RINGCENTRAL_CLIENT_ID', '') : '',
+    'client_id' => function_exists('env') ? env('RINGCENTRAL_CLIENT_ID', '') : '',
     'client_secret' => function_exists('env') ? env('RINGCENTRAL_CLIENT_SECRET', '') : '',
     'server_url' => function_exists('env') ? env('RINGCENTRAL_SERVER_URL', '') : '',
 

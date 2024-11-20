@@ -6,17 +6,15 @@ use Coxlr\RingCentral\RingCentral;
 use Coxlr\RingCentral\Tests\TestCase;
 use Dotenv\Dotenv;
 
-class RingCentralAdminTest extends TestCase
-{
+class RingCentralAdminTest extends TestCase {
     protected RingCentral|Coxlr\RingCentral\RingCentral $ringCentral;
 
-    public function setUp() : void
-    {
+    protected function setUp(): void {
         parent::setUp();
 
         $this->loadEnvironmentVariables();
 
-        $this->ringCentral = new RingCentral();
+        $this->ringCentral = new RingCentral;
 
         $this->ringCentral
             ->setClientId(env('RINGCENTRAL_CLIENT_ID'))
@@ -29,8 +27,7 @@ class RingCentralAdminTest extends TestCase
         $this->delay();
     }
 
-    protected function loadEnvironmentVariables(): void
-    {
+    protected function loadEnvironmentVariables(): void {
         if (! file_exists(__DIR__.'/../../.env')) {
             return;
         }
@@ -41,8 +38,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_can_retrieve_extensions(): void
-    {
+    public function it_can_retrieve_extensions(): void {
         $result = $this->ringCentral->getExtensions();
 
         $firstExtension = (array) $result[0];
@@ -52,8 +48,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_previous_24_hours(): void
-    {
+    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_previous_24_hours(): void {
         $this->ringCentral->authenticateOperator();
         $operatorExtensionId = $this->ringCentral->loggedInExtensionId();
 
@@ -72,8 +67,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_logs_in_the_admin_account_if_different_from_the_admin_account_when_retrieving_sms_messages_for_a_given_extension(): void
-    {
+    public function it_logs_in_the_admin_account_if_different_from_the_admin_account_when_retrieving_sms_messages_for_a_given_extension(): void {
         $this->ringCentral->authenticateOperator();
         $operatorExtensionId = $this->ringCentral->loggedInExtensionId();
 
@@ -83,8 +77,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date(): void
-    {
+    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date(): void {
         $this->ringCentral->sendMessage([
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
@@ -94,7 +87,7 @@ class RingCentralAdminTest extends TestCase
 
         $result = $this->ringCentral->getMessagesForExtensionId(
             $operatorExtensionId,
-            (new \DateTime())->modify('-1 mins')
+            (new \DateTime)->modify('-1 mins')
         );
 
         $this->assertTrue(count($result) < 3);
@@ -112,8 +105,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date_to_a_set_date(): void
-    {
+    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date_to_a_set_date(): void {
         $this->ringCentral->sendMessage([
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
@@ -123,8 +115,8 @@ class RingCentralAdminTest extends TestCase
 
         $result = $this->ringCentral->getMessagesForExtensionId(
             $operatorExtensionId,
-            (new \DateTime())->modify('-1 mins'),
-            (new \DateTime())->modify('+2 mins')
+            (new \DateTime)->modify('-1 mins'),
+            (new \DateTime)->modify('+2 mins')
         );
 
         $this->assertNotEmpty($result);
@@ -143,8 +135,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_with_per_page_limit_set(): void
-    {
+    public function it_can_retrieve_sent_sms_messages_for_a_given_extension_with_per_page_limit_set(): void {
         $this->ringCentral->sendMessage([
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
@@ -179,8 +170,7 @@ class RingCentralAdminTest extends TestCase
     }
 
     /** @test */
-    public function it_can_retrieve_an_sms_messages_attachement(): void
-    {
+    public function it_can_retrieve_an_sms_messages_attachement(): void {
         $this->ringCentral->sendMessage([
             'to' => env('RINGCENTRAL_RECEIVER'),
             'text' => 'Test Message',
@@ -192,7 +182,7 @@ class RingCentralAdminTest extends TestCase
 
         $result = $this->ringCentral->getMessagesForExtensionId(
             $operatorExtensionId,
-            (new \DateTime())->modify('-1 mins')
+            (new \DateTime)->modify('-1 mins')
         );
 
         $firstMessage = (array) $result[0];
