@@ -14,8 +14,6 @@ class RingCentralServiceProviderTest extends TestCase {
         $this->assertEquals('my_client_id', $ringCentral->clientId());
         $this->assertEquals('my_client_secret', $ringCentral->clientSecret());
         $this->assertEquals('my_server_url', $ringCentral->serverUrl());
-        $this->assertEquals('my_username', $ringCentral->username());
-        $this->assertEquals('my_operator_token', $ringCentral->operatorToken());
-        $this->assertEquals('my_admin_token', $ringCentral->adminToken());
+        $this->assertEquals('my_token', $ringCentral->token());
     }
 }

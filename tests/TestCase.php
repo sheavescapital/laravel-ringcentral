@@ -21,9 +21,7 @@ class TestCase extends Orchestra {
         $app['config']->set('ringcentral.client_id', 'my_client_id');
         $app['config']->set('ringcentral.client_secret', 'my_client_secret');
         $app['config']->set('ringcentral.server_url', 'my_server_url');
-        $app['config']->set('ringcentral.username', 'my_username');
-        $app['config']->set('ringcentral.operator_token', 'my_operator_token');
-        $app['config']->set('ringcentral.admin_token', 'my_admin_token');
+        $app['config']->set('ringcentral.token', 'my_token');
     }
 
     /**
