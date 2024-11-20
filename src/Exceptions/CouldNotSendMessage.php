@@ -4,11 +4,11 @@ namespace Coxlr\RingCentral\Exceptions;
 
 use Exception;
 
-class CouldNotSendMessage extends Exception
+final class CouldNotSendMessage extends Exception
 {
     public static function toNumberNotProvided(): static
     {
-        return new static('To number not provided');
+        return new self('To number not provided');
     }
 
     public static function textNotProvided(): static

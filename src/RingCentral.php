@@ -223,7 +223,7 @@ class RingCentral
     public function adminLoggedIn(): bool
     {
         if ($this->ringCentral->loggedIn()) {
-            return $this->ringCentral->get('/account/~/extension/~/')->json()?->permissions?->admin?->enabled ?? false;
+            return $this->ringCentral->get('/account/~/extension/~/')->json()->permissions->admin->enabled ?? false;
         }
 
         return false;
