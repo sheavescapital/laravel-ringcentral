@@ -211,7 +211,7 @@ class RingCentral {
      * @throws CouldNotAuthenticate
      * @throws ApiException
      */
-    public function getCallLogs(?object $fromDate = null, ?object $toDate = null, ?bool $withRecording = true, ?int $perPage = 100) {
+    public function getCallLogs(?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100) {
         $this->authenticate();
 
         $dates = [];
@@ -223,11 +223,13 @@ class RingCentral {
         if ($toDate) {
             $dates['dateTo'] = $toDate->format('c');
         }
+        if ($withRecording) {
+            $dates['recordingType'] = 'All';
+        }
 
         $r = $this->ringCentral->get('/account/~/call-log', array_merge(
             [
                 'type' => 'Voice',
-                'withRecording' => $withRecording,
                 'perPage' => $perPage,
             ],
             $dates
@@ -240,7 +242,7 @@ class RingCentral {
      * @throws CouldNotAuthenticate
      * @throws ApiException
      */
-    public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?bool $withRecording = true, ?int $perPage = 100) {
+    public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100) {
         $this->authenticate();
 
         $dates = [];
@@ -253,10 +255,13 @@ class RingCentral {
             $dates['dateTo'] = $toDate->format('c');
         }
 
+        if ($withRecording) {
+            $dates['recordingType'] = 'All';
+        }
+
         $r = $this->ringCentral->get('/account/~/extension/'.$extensionId.'/call-log', array_merge(
             [
                 'type' => 'Voice',
-                'withRecording' => $withRecording,
                 'perPage' => $perPage,
             ],
             $dates
