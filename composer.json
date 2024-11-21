@@ -16,9 +16,16 @@
             "role": "Developer"
         }
     ],
+
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:sheavescapital/ringcentral-php"
+        }
+    ],
     "require": {
         "php": "^8.0",
-        "ringcentral/ringcentral-php": "^2.2.5|^3.0.1"
+        "ringcentral/ringcentral-php": "dev-sheaves"
     },
     "require-dev": {
         "laravel/pint": "^1.18",
