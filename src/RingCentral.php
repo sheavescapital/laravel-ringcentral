@@ -1,22 +1,24 @@
 <?php
 
-namespace Coxlr\RingCentral;
+namespace SheavesCapital\RingCentral;
 
-use Coxlr\RingCentral\Exceptions\CouldNotAuthenticate;
-use Coxlr\RingCentral\Exceptions\CouldNotSendMessage;
-use RingCentral\SDK\Http\ApiException;
-use RingCentral\SDK\Http\ApiResponse;
-use RingCentral\SDK\Platform\Platform;
-use RingCentral\SDK\SDK;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use SheavesCapital\RingCentral\Exceptions\CouldNotSendMessage;
 
 class RingCentral {
-    protected ?Platform $ringCentral = null;
+    const ACCESS_TOKEN_TTL = 3600; // 60 minutes
+    const REFRESH_TOKEN_TTL = 604800; // 1 week
+    const TOKEN_ENDPOINT = '/restapi/oauth/token';
+    const API_VERSION = 'v1.0';
+    const URL_PREFIX = '/restapi';
     protected string $serverUrl;
     protected string $clientId;
     protected string $clientSecret;
+    protected string $jwt;
     protected string $loggedInExtension;
     protected string $loggedInExtensionId;
-    protected ?string $token = null;
 
     public function setClientId(string $clientId): static {
         $this->clientId = $clientId;
@@ -36,39 +38,102 @@ class RingCentral {
         return $this;
     }
 
-    public function setToken(string $token): static {
-        $this->token = $token;
+    public function setjWT(string $jwt): static {
+        $this->jwt = $jwt;
 
         return $this;
     }
 
-    public function clientId(): string {
-        return $this->clientId;
+    protected function apiKey(): string {
+        return base64_encode($this->clientId.':'.$this->clientSecret);
     }
 
-    public function clientSecret(): string {
-        return $this->clientSecret;
+    protected static function errorHandler(Response $response): void {
+        throw new \Exception($response->json('message'), $response->status());
     }
 
-    public function serverUrl(): string {
-        return $this->serverUrl;
+    protected function login(): Response {
+        $response = Http::withHeaders([
+            'Authorization' => 'Basic '.$this->apiKey(),
+            'Content-Type' => 'application/x-www-form-urlencoded',
+        ])->get($this->serverUrl.self::TOKEN_ENDPOINT, [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $this->jwt,
+            'access_token_ttl' => self::ACCESS_TOKEN_TTL,
+            'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
+        ]);
+        $response->onError($this->errorHandler(...));
+        $access_token = $response->json('access_token');
+        Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
+        Cache::put('ringcentral_refresh_token', $response->json('refresh_token'), $response->json('refresh_token_expires_in'));
+        return $access_token;
     }
 
-    public function token(): string {
-        return $this->token;
+    protected function refresh(): string {
+        $response = Http::withHeaders([
+            'Authorization' => 'Basic '.$this->apiKey(),
+            'Content-Type' => 'application/x-www-form-urlencoded',
+        ])->get($this->serverUrl.self::TOKEN_ENDPOINT, [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => Cache::get('ringcentral_refresh_token'),
+            'access_token_ttl' => self::ACCESS_TOKEN_TTL,
+            'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
+        ]);
+        $response->onError($this->errorHandler(...));
+        $access_token = $response->json('access_token');
+        Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
+        return $access_token;
     }
 
-    public function connect(): void {
-        $this->ringCentral = (new SDK($this->clientId(), $this->clientSecret(), $this->serverUrl()))->platform();
+    protected function accessToken(): string {
+        if (Cache::has('ringcentral_access_token')) {
+            return Cache::get('ringcentral_access_token');
+        } elseif (Cache::has('ringcentral_refresh_token')) {
+            return $this->refresh();
+        } else {
+            return $this->login();
+        }
     }
 
-    public function login(): void {
-        $this->ringCentral->login(['jwt' => $this->Token()]);
-        $this->setLoggedInExtension();
+    protected function prependPath(string $url): string {
+        return $this->serverUrl.self::URL_PREFIX.'/'.self::API_VERSION.$url;
+    }
+
+    public function get(string $url, array $query = [], array $headers = [], bool $prependPath = true): Response {
+        $response = Http::withToken($this->accessToken())
+            ->withHeaders($headers)
+            ->get(
+                $prependPath ? $this->prependPath($url) : $url,
+                $query
+            );
+        $response->onError($this->errorHandler(...));
+        return $response;
+    }
+
+    public function post(string $url, array $body = [], array $headers = [], bool $prependPath = true): Response {
+        $response = Http::withToken($this->accessToken())
+            ->withHeaders($headers)
+            ->post(
+                $prependPath ? $this->prependPath($url) : $url,
+                $body
+            );
+        $response->onError($this->errorHandler(...));
+        return $response;
+    }
+
+    public function delete(string $url, array $query = [], array $headers = [], bool $prependPath = true): Response {
+        $response = Http::withToken($this->accessToken())
+            ->withHeaders($headers)
+            ->delete(
+                $prependPath ? $this->prependPath($url) : $url,
+                $query
+            );
+        $response->onError($this->errorHandler(...));
+        return $response;
     }
 
     public function setLoggedInExtension(): void {
-        $extension = $this->ringCentral->get('/account/~/extension/~/')->json();
+        $extension = $this->get('/account/~/extension/~/')->json();
         $this->loggedInExtensionId = $extension->id;
         $this->loggedInExtension = $extension->extensionNumber;
     }
@@ -81,42 +146,7 @@ class RingCentral {
         return $this->loggedInExtension;
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     */
-    public function authenticate(): bool {
-        if (! $this->ringCentral) {
-            $this->connect();
-        }
-
-        if (! $this->loggedIn()) {
-            $this->login();
-        }
-
-        if (! $this->ringCentral->loggedIn()) {
-            throw CouldNotAuthenticate::loginFailed();
-        }
-
-        return true;
-    }
-
-    /**
-     * @throws ApiException
-     */
-    public function loggedIn(): bool {
-        if ($this->ringCentral->loggedIn()) {
-            return $this->ringCentral->get('/account/~/extension/~/')->json()->permissions->admin->enabled ?? false;
-        }
-
-        return false;
-    }
-
-    /**
-     * @throws CouldNotSendMessage
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function sendMessage(array $message): ApiResponse {
+    public function sendMessage(array $message): Response {
         if (empty($message['from'])) {
             throw CouldNotSendMessage::toNumberNotProvided();
         }
@@ -129,9 +159,7 @@ class RingCentral {
             throw CouldNotSendMessage::textNotProvided();
         }
 
-        $this->authenticate();
-
-        return $this->ringCentral->post('/account/~/extension/~/sms', [
+        return $this->post('/account/~/extension/~/sms', [
             'from' => ['phoneNumber' => $message['from']],
             'to' => [
                 ['phoneNumber' => $message['to']],
@@ -140,21 +168,11 @@ class RingCentral {
         ]);
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
     public function getExtensions(): array {
-        $this->authenticate();
-
-        $r = $this->ringCentral->get('/account/~/extension');
-
+        $r = $this->get('/account/~/extension');
         return $r->json()->records;
     }
 
-    /**
-     * @throws ApiException
-     */
     protected function getMessages(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
         $dates = [];
 
@@ -166,7 +184,7 @@ class RingCentral {
             $dates['dateTo'] = $toDate->format('c');
         }
 
-        $r = $this->ringCentral->get('/account/~/extension/'.$extensionId.'/message-store', array_merge(
+        $r = $this->get('/account/~/extension/'.$extensionId.'/message-store', array_merge(
             [
                 'messageType' => 'SMS',
                 'perPage' => $perPage,
@@ -177,43 +195,19 @@ class RingCentral {
         return $r->json()->records;
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
     public function getMessagesForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
-        $this->authenticate();
-
         return $this->getMessages($extensionId, $fromDate, $toDate, $perPage);
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
     public function getPhoneNumbers(): array {
-        $this->authenticate();
-
-        return $this->ringCentral->get('/account/~/phone-number')->json()->records;
+        return $this->get('/account/~/phone-number')->json()->records;
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): ApiResponse {
-        $this->authenticate();
-
-        return $this->ringCentral->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
+    public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): Response {
+        return $this->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function getCallLogs(?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100) {
-        $this->authenticate();
-
+    public function getCallLogs(?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100): array {
         $dates = [];
 
         if ($fromDate) {
@@ -227,7 +221,7 @@ class RingCentral {
             $dates['recordingType'] = 'All';
         }
 
-        $r = $this->ringCentral->get('/account/~/call-log', array_merge(
+        $r = $this->get('/account/~/call-log', array_merge(
             [
                 'type' => 'Voice',
                 'perPage' => $perPage,
@@ -238,13 +232,7 @@ class RingCentral {
         return $r->json()->records;
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100) {
-        $this->authenticate();
-
+    public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100): array {
         $dates = [];
 
         if ($fromDate) {
@@ -259,7 +247,7 @@ class RingCentral {
             $dates['recordingType'] = 'All';
         }
 
-        $r = $this->ringCentral->get('/account/~/extension/'.$extensionId.'/call-log', array_merge(
+        $r = $this->get('/account/~/extension/'.$extensionId.'/call-log', array_merge(
             [
                 'type' => 'Voice',
                 'perPage' => $perPage,
@@ -270,34 +258,16 @@ class RingCentral {
         return $r->json()->records;
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function getRecordingById(string $recordingId): ApiResponse {
-        $this->authenticate();
-
-        return $this->ringCentral->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content");
+    public function getRecordingById(string $recordingId): Response {
+        return $this->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content");
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
     public function listWebhooks(): array {
-        $this->authenticate();
-
-        return $this->ringCentral->get('/subscription')->json()->records;
+        return $this->get('/subscription')->json()->records;
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function createWebhook(array $filters, int $expiresIn, ?string $address, ?string $verificationToken): ApiResponse {
-        $this->authenticate();
-
-        return $this->ringCentral->post('/subscription', [
+    public function createWebhook(array $filters, int $expiresIn, ?string $address, ?string $verificationToken): Response {
+        return $this->post('/subscription', [
             'eventFilters' => $filters,
             'expiresIn' => $expiresIn,
             'deliveryMode' => [
@@ -307,13 +277,7 @@ class RingCentral {
         ]);
     }
 
-    /**
-     * @throws CouldNotAuthenticate
-     * @throws ApiException
-     */
-    public function deleteWebhook(string $webhookId): ApiResponse {
-        $this->authenticate();
-
-        return $this->ringCentral->delete("/subscription/{$webhookId}");
+    public function deleteWebhook(string $webhookId): Response {
+        return $this->delete("/subscription/{$webhookId}");
     }
 }

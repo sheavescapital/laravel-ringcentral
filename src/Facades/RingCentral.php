@@ -1,6 +1,6 @@
 <?php
 
-namespace Coxlr\RingCentral\Facades;
+namespace SheavesCapital\RingCentral\Facades;
 
 use Illuminate\Support\Facades\Facade;
 

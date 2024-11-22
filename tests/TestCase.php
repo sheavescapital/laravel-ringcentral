@@ -1,10 +1,10 @@
 <?php
 
-namespace Coxlr\RingCentral\Tests;
+namespace SheavesCapital\RingCentral\Tests;
 
-use Coxlr\RingCentral\RingCentralServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use ReflectionException;
+use SheavesCapital\RingCentral\RingCentralServiceProvider;
 
 class TestCase extends Orchestra {
     protected function setUp(): void {
@@ -21,7 +21,7 @@ class TestCase extends Orchestra {
         $app['config']->set('ringcentral.client_id', 'my_client_id');
         $app['config']->set('ringcentral.client_secret', 'my_client_secret');
         $app['config']->set('ringcentral.server_url', 'my_server_url');
-        $app['config']->set('ringcentral.token', 'my_token');
+        $app['config']->set('ringcentral.jwt', 'my_jwt');
     }
 
     /**
