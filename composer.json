@@ -2,30 +2,20 @@
     "name": "sheavescapital/laravel-ringcentral",
     "description": "A Laravel package for the RingCentral SDK for PHP",
     "keywords": [
-        "coxlr",
         "laravel",
         "ringcentral"
     ],
-    "homepage": "https://github.com/coxlr/laravel-ringcentral",
+    "homepage": "https://github.com/sheavescapital/laravel-ringcentral",
     "license": "MIT",
     "authors": [
         {
-            "name": "Lee Cox",
-            "email": "hello@leecox.dev",
-            "homepage": "https://leecox.dev",
-            "role": "Developer"
+            "name": "SheavesCapital"
         }
     ],
 
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "git@github.com:sheavescapital/ringcentral-php"
-        }
-    ],
     "require": {
         "php": "^8.0",
-        "ringcentral/ringcentral-php": "dev-sheaves"
+        "laravel/framework": "^11.0"
     },
     "require-dev": {
         "laravel/pint": "^1.18",
@@ -36,12 +26,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Coxlr\\RingCentral\\": "src"
+            "SheavesCapital\\RingCentral\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Coxlr\\RingCentral\\Tests\\": "tests"
+            "SheavesCapital\\RingCentral\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -59,10 +49,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Coxlr\\RingCentral\\RingCentralServiceProvider"
+                "SheavesCapital\\RingCentral\\RingCentralServiceProvider"
             ],
             "aliases": {
-                "RingCentral": "Coxlr\\RingCentral\\Facades\\RingCentral"
+                "RingCentral": "SheavesCapital\\RingCentral\\Facades\\RingCentral"
             }
         }
     },

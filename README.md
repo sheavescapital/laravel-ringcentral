@@ -1,9 +1,10 @@
 # A Laravel package for the RingCentral SDK for PHP
 
 
-This is a simple Laravel Service Provider providing access to the [RingCentral SDK for PHP][client-library].
+This is a simple Laravel Service Provider providing access to the RingCentral API.
 
 Forked from [https://github.com/coxlr/laravel-ringcentral](https://github.com/coxlr/laravel-ringcentral), Created by [Lee Cox](https://github.com/coxlr)
+With code from: [RingCentral Connect Platform PHP SDK](https://github.com/ringcentral/ringcentral-php)
 
 ## Installation
 
@@ -12,7 +13,7 @@ This package requires PHP 8.0 and Laravel 8 or higher.
 To install the PHP client library using Composer:
 
 ```bash
-composer require coxlr/laravel-ringcentral
+composer require sheavescapital/laravel-ringcentral
 ```
 
 The package will automatically register the `RingCentral` provider and facade.
@@ -20,7 +21,7 @@ The package will automatically register the `RingCentral` provider and facade.
 
 You can publish the config file with:
 ```bash
-php artisan vendor:publish --provider="Coxlr\RingCentral\RingCentralServiceProvider" --tag="config"
+php artisan vendor:publish --provider="SheavesCapital\RingCentral\RingCentralServiceProvider" --tag="config"
 ```
 
 
@@ -30,7 +31,7 @@ Then update `config/ringcentral.php` with your credentials. Alternatively, you c
 RINGCENTRAL_CLIENT_ID=my_client_id
 RINGCENTRAL_CLIENT_SECRET=my_client_secret
 RINGCENTRAL_SERVER_URL=my_server_url
-RINGCENTRAL_TOKEN=my_jwt
+RINGCENTRAL_JWT=my_jwt
 ```
 This package uses the JWT autentication method. You can learn more about setting up JWT for your RingCentral account [here](https://developers.ringcentral.com/guide/authentication/jwt/quick-start).
 
@@ -134,28 +135,6 @@ $ringcentral->getMessageAttachmentById(12345678, 910111213, 45678910);
 | messageId  | true    | String      |             | The id of the message of the the attachment belongs to |
 | attachmentId  | true    | String      |             | The id of the attachment |
 
-
-
-For more information on using the RingCentral client library, see the [official client library repository][client-library].
-
-[client-library]: https://github.com/ringcentral/ringcentral-php
-
-
-## Testing
-
-``` bash
-composer test
-```
-If using the RingCentral sandbox environment when testing set the following environment variable to true to handle sandbox message prefix.
-
-```dotenv
-RINGCENTRAL_IS_SANDBOX=true
-```
-An optional environment value can be set to prevent hitting RingCentral rate limits when testing. This will add a delay for the set seconds before each test.
-
-```dotenv
-RINGCENTRAL_DELAY_REQUEST_SECONDS=20
-```
 
 
 ## License

@@ -1,12 +1,12 @@
 <?php
 
-namespace Coxlr\Ringcentral\Tests\Feature;
+namespace SheavesCapital\Ringcentral\Tests\Feature;
 
-use Coxlr\RingCentral\Exceptions\CouldNotSendMessage;
-use Coxlr\RingCentral\RingCentral;
-use Coxlr\RingCentral\Tests\TestCase;
 use Dotenv\Dotenv;
-use RingCentral\SDK\Http\ApiException;
+use Exception;
+use SheavesCapital\RingCentral\Exceptions\CouldNotSendMessage;
+use SheavesCapital\RingCentral\RingCentral;
+use SheavesCapital\RingCentral\Tests\TestCase;
 
 class RingCentralTest extends TestCase {
     protected RingCentral $ringCentral;
@@ -22,7 +22,7 @@ class RingCentralTest extends TestCase {
             ->setClientId(env('RINGCENTRAL_CLIENT_ID'))
             ->setClientSecret(env('RINGCENTRAL_CLIENT_SECRET'))
             ->setServerUrl(env('RINGCENTRAL_SERVER_URL'))
-            ->setToken(env('RINGCENTRAL_TOKEN'));
+            ->setJwt(env('RINGCENTRAL_JWT'));
 
         $this->delay();
     }
@@ -68,7 +68,7 @@ class RingCentralTest extends TestCase {
 
     /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_previous_24_hours(): void {
-        $this->ringCentral->authenticate();
+        $this->ringCentral->setLoggedInExtension();
         $extensionId = $this->ringCentral->loggedInExtensionId();
 
         $result = $this->ringCentral->getMessagesForExtensionId($extensionId);
@@ -87,6 +87,7 @@ class RingCentralTest extends TestCase {
 
     /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date(): void {
+        $this->ringCentral->setLoggedInExtension();
         $this->ringCentral->sendMessage([
             'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
@@ -116,6 +117,7 @@ class RingCentralTest extends TestCase {
 
     /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_from_a_set_date_to_a_set_date(): void {
+        $this->ringCentral->setLoggedInExtension();
         $this->ringCentral->sendMessage([
             'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
@@ -147,6 +149,7 @@ class RingCentralTest extends TestCase {
 
     /** @test */
     public function it_can_retrieve_sent_sms_messages_for_a_given_extension_with_per_page_limit_set(): void {
+        $this->ringCentral->setLoggedInExtension();
         $this->ringCentral->sendMessage([
             'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
@@ -184,6 +187,7 @@ class RingCentralTest extends TestCase {
 
     /** @test */
     public function it_can_retrieve_an_sms_messages_attachement(): void {
+        $this->ringCentral->setLoggedInExtension();
         $this->ringCentral->sendMessage([
             'from' => env('RINGCENTRAL_SENDER'),
             'to' => env('RINGCENTRAL_RECEIVER'),
@@ -207,7 +211,7 @@ class RingCentralTest extends TestCase {
             $firstMessage['attachments'][0]->id
         );
 
-        $this->assertNotNull($attachment->raw());
+        $this->assertNotNull($attachment->json());
     }
 
     /** @test */
@@ -242,7 +246,7 @@ class RingCentralTest extends TestCase {
 
     /** @test */
     public function an_exception_is_thrown_if_message_not_sent(): void {
-        $this->expectException(ApiException::class);
+        $this->expectException(Exception::class);
 
         $this->ringCentral->sendMessage([
             'from' => env('RINGCENTRAL_SENDER'),

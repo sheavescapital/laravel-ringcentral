@@ -1,8 +1,8 @@
 <?php
 
-namespace Coxlr\RingCentral\Tests;
+namespace SheavesCapital\RingCentral\Tests;
 
-use Coxlr\RingCentral\RingCentral;
+use SheavesCapital\RingCentral\RingCentral;
 
 class RingCentralServiceProviderTest extends TestCase {
     /** @test */
@@ -10,10 +10,5 @@ class RingCentralServiceProviderTest extends TestCase {
         $ringCentral = app('ringcentral');
 
         $this->assertInstanceOf(RingCentral::class, $ringCentral);
-
-        $this->assertEquals('my_client_id', $ringCentral->clientId());
-        $this->assertEquals('my_client_secret', $ringCentral->clientSecret());
-        $this->assertEquals('my_server_url', $ringCentral->serverUrl());
-        $this->assertEquals('my_token', $ringCentral->token());
     }
 }

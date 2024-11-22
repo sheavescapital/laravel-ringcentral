@@ -1,6 +1,6 @@
 <?php
 
-namespace Coxlr\RingCentral\Exceptions;
+namespace SheavesCapital\RingCentral\Exceptions;
 
 use Exception;
 

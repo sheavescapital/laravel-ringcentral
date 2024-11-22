@@ -1,6 +1,6 @@
 <?php
 
-namespace Coxlr\RingCentral;
+namespace SheavesCapital\RingCentral;
 
 use Illuminate\Contracts\Config\Repository as Config;
 use Illuminate\Contracts\Container\BindingResolutionException;
@@ -53,8 +53,8 @@ class RingCentralServiceProvider extends ServiceProvider {
             ->setClientSecret(config('ringcentral.client_secret'))
             ->setServerUrl(config('ringcentral.server_url'));
 
-        if ($this->ringCentralConfigHas('token')) {
-            $ringCentral->setToken(config('ringcentral.token'));
+        if ($this->ringCentralConfigHas('jwt')) {
+            $ringCentral->setJwt(config('ringcentral.jwt'));
         }
 
         return $ringCentral;
