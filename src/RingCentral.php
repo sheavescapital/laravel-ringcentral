@@ -3,6 +3,8 @@
 namespace SheavesCapital\RingCentral;
 
 use Illuminate\Http\Client\Response;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use SheavesCapital\RingCentral\Exceptions\CouldNotSendMessage;
@@ -48,7 +50,7 @@ class RingCentral {
         throw new \Exception($response->json('message'), $response->status());
     }
 
-    protected function login(): Response {
+    protected function login(): string {
         $response = Http::asForm()
             ->acceptJson()
             ->withBasicAuth($this->clientId, $this->clientSecret)
@@ -164,113 +166,95 @@ class RingCentral {
         ]);
     }
 
-    public function getExtensions(): array {
+    public function getExtensions(): Collection {
         $r = $this->get('/account/~/extension');
-        return $r->json('records');
+        return collect($r->json('records'));
     }
 
-    protected function getMessages(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
-        $dates = [];
-
+    protected function getMessages(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
+        $data = [
+            'messageType' => 'SMS',
+            'perPage' => $perPage,
+        ];
         if ($fromDate) {
-            $dates['dateFrom'] = $fromDate->format('c');
+            $dtat['dateFrom'] = $fromDate->toIso8601String();
         }
-
         if ($toDate) {
-            $dates['dateTo'] = $toDate->format('c');
+            $data['dateTo'] = $toDate->toIso8601String();
         }
-
-        $r = $this->get('/account/~/extension/'.$extensionId.'/message-store', array_merge(
-            [
-                'messageType' => 'SMS',
-                'perPage' => $perPage,
-            ],
-            $dates
-        ));
-
-        return $r->json('records');
+        $r = $this->get('/account/~/extension/'.$extensionId.'/message-store', $data);
+        return collect($r->json('records'));
     }
 
-    public function getMessagesForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
-        return $this->getMessages($extensionId, $fromDate, $toDate, $perPage);
+    public function getMessagesForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
+        return collect($this->getMessages($extensionId, $fromDate, $toDate, $perPage));
     }
 
-    public function getPhoneNumbers(): array {
-        return $this->get('/account/~/phone-number')->json('records');
+    public function getPhoneNumbers(): Collection {
+        return collect($this->get('/account/~/phone-number')->json('records'));
     }
 
     public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): Response {
         return $this->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
     }
 
-    public function getCallLogs(?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100): array {
-        $dates = [];
-
+    public function getCallLogs(?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
+        $data = [
+            'type' => 'Voice',
+            'perPage' => $perPage,
+        ];
         if ($fromDate) {
-            $dates['dateFrom'] = $fromDate->format('c');
+            $data['dateFrom'] = $fromDate->toIso8601String();
         }
-
         if ($toDate) {
-            $dates['dateTo'] = $toDate->format('c');
+            $dtat['dateTo'] = $toDate->toIso8601String();
         }
         if ($withRecording) {
-            $dates['recordingType'] = 'All';
+            $dtat['recordingType'] = 'All';
         }
-
-        $r = $this->get('/account/~/call-log', array_merge(
-            [
-                'type' => 'Voice',
-                'perPage' => $perPage,
-            ],
-            $dates
-        ));
-
-        return $r->json('records');
+        $r = $this->get('/account/~/call-log', $data);
+        return collect($r->json('records'));
     }
 
-    public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100): array {
-        $dates = [];
-
+    public function getCallLogsForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
+        $data = [
+            'type' => 'Voice',
+            'perPage' => $perPage,
+        ];
         if ($fromDate) {
-            $dates['dateFrom'] = $fromDate->format('c');
+            $data['dateFrom'] = $fromDate->toIso8601String();
         }
-
         if ($toDate) {
-            $dates['dateTo'] = $toDate->format('c');
+            $dtat['dateTo'] = $toDate->toIso8601String();
         }
-
         if ($withRecording) {
-            $dates['recordingType'] = 'All';
+            $dtat['recordingType'] = 'All';
         }
-
-        $r = $this->get('/account/~/extension/'.$extensionId.'/call-log', array_merge(
-            [
-                'type' => 'Voice',
-                'perPage' => $perPage,
-            ],
-            $dates
-        ));
-
-        return $r->json('records');
+        $r = $this->get('/account/~/extension/'.$extensionId.'/call-log', $data);
+        return collect($r->json('records'));
     }
 
     public function getRecordingById(string $recordingId): Response {
-        return $this->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content");
+        return $this->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content", prependPath: false);
     }
 
-    public function listWebhooks(): array {
-        return $this->get('/subscription')->json('records');
+    public function listWebhooks(): Collection {
+        return collect($this->get('/subscription')->json('records'));
     }
 
-    public function createWebhook(array $filters, int $expiresIn, ?string $address, ?string $verificationToken): Response {
-        return $this->post('/subscription', [
+    public function createWebhook(array $filters, int $expiresIn, string $address, ?string $verificationToken = null): Response {
+        $data = [
             'eventFilters' => $filters,
             'expiresIn' => $expiresIn,
             'deliveryMode' => [
                 'transportType' => 'WebHook',
                 'address' => $address,
             ],
-        ]);
+        ];
+        if ($verificationToken) {
+            $data['deliveryMode']['verificationToken'] = $verificationToken;
+        }
+        return $this->post('/subscription', $data);
     }
 
     public function deleteWebhook(string $webhookId): Response {
