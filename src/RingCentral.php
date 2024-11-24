@@ -244,15 +244,6 @@ class RingCentral {
         return $response;
     }
 
-    public function saveRecordingById(string $recordingId, string $disk, string $path): string|false {
-        $response = $this->getRecordingById($recordingId);
-        $ext = ($response->header('Content-Type') == 'audio/mpeg') ? '.mp3' : '.wav';
-        $name = Str::random(40).$ext;
-        $path = trim($path, '/').'/'.$name;
-        $result = Storage::disk($disk)->put($path, $response->body());
-        return $result ? $path : false;
-    }
-
     public function saveRecordingById(string $recordingId, ?string $disk = null, string $path = ''): string|false {
         $response = $this->getRecordingById($recordingId);
         $ext = ($response->header('Content-Type') == 'audio/mpeg') ? '.mp3' : '.wav';
