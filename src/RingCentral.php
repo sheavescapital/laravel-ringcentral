@@ -237,11 +237,7 @@ class RingCentral {
     }
 
     public function getRecordingById(string $recordingId): Response {
-        $response = Http::withToken($this->accessToken())
-            ->withOptions(['stream' => true])
-            ->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content");
-        $response->onError($this->errorHandler(...));
-        return $response;
+        return $this->get("https://media.ringcentral.com/restapi/v1.0/account/~/recording/{$recordingId}/content", prependPath: false);
     }
 
     public function saveRecordingById(string $recordingId, ?string $disk = null, string $path = ''): string|false {
