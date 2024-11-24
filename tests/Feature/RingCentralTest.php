@@ -98,7 +98,7 @@ class RingCentralTest extends TestCase {
 
         $result = $this->ringCentral->getMessagesForExtensionId(
             $operatorExtensionId,
-            (new \DateTime)->modify('-1 mins')
+            now()->subMinute()
         );
 
         $this->assertTrue(count($result) < 3);
@@ -128,11 +128,11 @@ class RingCentralTest extends TestCase {
 
         $result = $this->ringCentral->getMessagesForExtensionId(
             $operatorExtensionId,
-            (new \DateTime)->modify('-1 mins'),
-            (new \DateTime)->modify('+2 mins')
+            now()->subMinute(),
+            now()->addMinutes(2)
         );
 
-        $this->assertNotEmpty($result);
+        $this->assertNotEmpty($result->toArray());
         $this->assertTrue(count($result) < 10);
 
         $firstMessage = (array) $result[0];
@@ -200,7 +200,7 @@ class RingCentralTest extends TestCase {
 
         $result = $this->ringCentral->getMessagesForExtensionId(
             $operatorExtensionId,
-            (new \DateTime)->modify('-1 mins')
+            now()->subMinute()
         );
 
         $firstMessage = (array) $result[0];
