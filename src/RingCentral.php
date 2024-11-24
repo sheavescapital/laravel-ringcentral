@@ -253,6 +253,14 @@ class RingCentral {
         return $result ? $path : false;
     }
 
+    public function saveRecordingById(string $recordingId, ?string $disk = null, string $path = ''): string|false {
+        $response = $this->getRecordingById($recordingId);
+        $ext = ($response->header('Content-Type') == 'audio/mpeg') ? '.mp3' : '.wav';
+        $path = trim($path, '/').'/'.Str::random(2).'/'.Str::random(40).$ext;
+        $result = Storage::disk($disk)->put($path, $response->body());
+        return $result ? $path : false;
+    }
+
     public function listWebhooks(): Collection {
         return $this->get('/subscription')->collect('records');
     }
