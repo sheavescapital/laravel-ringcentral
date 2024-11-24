@@ -7,6 +7,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use SheavesCapital\RingCentral\Exceptions\CouldNotSendMessage;
 
 class RingCentral {
@@ -168,7 +170,7 @@ class RingCentral {
 
     public function getExtensions(): Collection {
         $r = $this->get('/account/~/extension');
-        return collect($r->json('records'));
+        return $r->collect('records');
     }
 
     protected function getMessages(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
@@ -183,15 +185,15 @@ class RingCentral {
             $data['dateTo'] = $toDate->toIso8601String();
         }
         $r = $this->get('/account/~/extension/'.$extensionId.'/message-store', $data);
-        return collect($r->json('records'));
+        return $r->collect('records');
     }
 
     public function getMessagesForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
-        return collect($this->getMessages($extensionId, $fromDate, $toDate, $perPage));
+        return $this->getMessages($extensionId, $fromDate, $toDate, $perPage);
     }
 
     public function getPhoneNumbers(): Collection {
-        return collect($this->get('/account/~/phone-number')->json('records'));
+        return $this->get('/account/~/phone-number')->collect('records');
     }
 
     public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): Response {
@@ -213,7 +215,7 @@ class RingCentral {
             $dtat['recordingType'] = 'All';
         }
         $r = $this->get('/account/~/call-log', $data);
-        return collect($r->json('records'));
+        return $r->collect('records');
     }
 
     public function getCallLogsForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
@@ -231,7 +233,7 @@ class RingCentral {
             $dtat['recordingType'] = 'All';
         }
         $r = $this->get('/account/~/extension/'.$extensionId.'/call-log', $data);
-        return collect($r->json('records'));
+        return $r->collect('records');
     }
 
     public function getRecordingById(string $recordingId): Response {
@@ -239,7 +241,7 @@ class RingCentral {
     }
 
     public function listWebhooks(): Collection {
-        return collect($this->get('/subscription')->json('records'));
+        return $this->get('/subscription')->collect('records');
     }
 
     public function createWebhook(array $filters, int $expiresIn, string $address, ?string $verificationToken = null): Response {
