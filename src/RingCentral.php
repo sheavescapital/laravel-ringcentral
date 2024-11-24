@@ -44,24 +44,20 @@ class RingCentral {
         return $this;
     }
 
-    protected function apiKey(): string {
-        return base64_encode($this->clientId.':'.$this->clientSecret);
-    }
-
     protected static function errorHandler(Response $response): void {
         throw new \Exception($response->json('message'), $response->status());
     }
 
     protected function login(): Response {
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic '.$this->apiKey(),
-            'Content-Type' => 'application/x-www-form-urlencoded',
-        ])->get($this->serverUrl.self::TOKEN_ENDPOINT, [
-            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $this->jwt,
-            'access_token_ttl' => self::ACCESS_TOKEN_TTL,
-            'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
-        ]);
+        $response = Http::asForm()
+            ->acceptJson()
+            ->withBasicAuth($this->clientId, $this->clientSecret)
+            ->post($this->serverUrl.self::TOKEN_ENDPOINT, [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $this->jwt,
+                'access_token_ttl' => self::ACCESS_TOKEN_TTL,
+                'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
+            ]);
         $response->onError($this->errorHandler(...));
         $access_token = $response->json('access_token');
         Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
@@ -70,15 +66,15 @@ class RingCentral {
     }
 
     protected function refresh(): string {
-        $response = Http::withHeaders([
-            'Authorization' => 'Basic '.$this->apiKey(),
-            'Content-Type' => 'application/x-www-form-urlencoded',
-        ])->get($this->serverUrl.self::TOKEN_ENDPOINT, [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => Cache::get('ringcentral_refresh_token'),
-            'access_token_ttl' => self::ACCESS_TOKEN_TTL,
-            'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
-        ]);
+        $response = Http::asForm()
+            ->acceptJson()
+            ->withBasicAuth($this->clientId, $this->clientSecret)
+            ->post($this->serverUrl.self::TOKEN_ENDPOINT, [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => Cache::get('ringcentral_refresh_token'),
+                'access_token_ttl' => self::ACCESS_TOKEN_TTL,
+                'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
+            ]);
         $response->onError($this->errorHandler(...));
         $access_token = $response->json('access_token');
         Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
@@ -170,7 +166,7 @@ class RingCentral {
 
     public function getExtensions(): array {
         $r = $this->get('/account/~/extension');
-        return $r->json()->records;
+        return $r->json('records');
     }
 
     protected function getMessages(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
@@ -192,7 +188,7 @@ class RingCentral {
             $dates
         ));
 
-        return $r->json()->records;
+        return $r->json('records');
     }
 
     public function getMessagesForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, ?int $perPage = 100): array {
@@ -200,7 +196,7 @@ class RingCentral {
     }
 
     public function getPhoneNumbers(): array {
-        return $this->get('/account/~/phone-number')->json()->records;
+        return $this->get('/account/~/phone-number')->json('records');
     }
 
     public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): Response {
@@ -229,7 +225,7 @@ class RingCentral {
             $dates
         ));
 
-        return $r->json()->records;
+        return $r->json('records');
     }
 
     public function getCallLogsForExtensionId(string $extensionId, ?object $fromDate = null, ?object $toDate = null, bool $withRecording = true, ?int $perPage = 100): array {
@@ -255,7 +251,7 @@ class RingCentral {
             $dates
         ));
 
-        return $r->json()->records;
+        return $r->json('records');
     }
 
     public function getRecordingById(string $recordingId): Response {
@@ -263,7 +259,7 @@ class RingCentral {
     }
 
     public function listWebhooks(): array {
-        return $this->get('/subscription')->json()->records;
+        return $this->get('/subscription')->json('records');
     }
 
     public function createWebhook(array $filters, int $expiresIn, ?string $address, ?string $verificationToken): Response {
