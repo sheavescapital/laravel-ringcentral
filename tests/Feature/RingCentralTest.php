@@ -22,7 +22,8 @@ class RingCentralTest extends TestCase {
             ->setClientId(env('RINGCENTRAL_CLIENT_ID'))
             ->setClientSecret(env('RINGCENTRAL_CLIENT_SECRET'))
             ->setServerUrl(env('RINGCENTRAL_SERVER_URL'))
-            ->setJwt(env('RINGCENTRAL_JWT'));
+            ->setJwt(env('RINGCENTRAL_JWT'))
+            ->setVerificationToken(env('RINGCENTRAL_VERIFICATION_TOKEN'));
 
         $this->delay();
     }
