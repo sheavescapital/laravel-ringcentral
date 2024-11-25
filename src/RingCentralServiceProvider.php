@@ -57,6 +57,10 @@ class RingCentralServiceProvider extends ServiceProvider {
             $ringCentral->setJwt(config('ringcentral.jwt'));
         }
 
+        if ($this->ringCentralConfigHas('verification_token')) {
+            $ringCentral->setVerificationToken(config('ringcentral.verification_token'));
+        }
+
         return $ringCentral;
     }
 
