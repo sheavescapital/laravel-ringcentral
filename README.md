@@ -32,6 +32,7 @@ RINGCENTRAL_CLIENT_ID=my_client_id
 RINGCENTRAL_CLIENT_SECRET=my_client_secret
 RINGCENTRAL_SERVER_URL=my_server_url
 RINGCENTRAL_JWT=my_jwt
+RINGCENTRAL_VERIFICATION_TOKEN=my_verification_token
 ```
 This package uses the JWT autentication method. You can learn more about setting up JWT for your RingCentral account [here](https://developers.ringcentral.com/guide/authentication/jwt/quick-start).
 

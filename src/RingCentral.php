@@ -21,30 +21,32 @@ class RingCentral {
     protected string $clientId;
     protected string $clientSecret;
     protected string $jwt;
+    protected string $verification_token;
     protected string $loggedInExtension;
     protected string $loggedInExtensionId;
 
     public function setClientId(string $clientId): static {
         $this->clientId = $clientId;
-
         return $this;
     }
 
     public function setClientSecret(string $clientSecret): static {
         $this->clientSecret = $clientSecret;
-
         return $this;
     }
 
     public function setServerUrl(string $serverUrl): static {
         $this->serverUrl = $serverUrl;
-
         return $this;
     }
 
     public function setjWT(string $jwt): static {
         $this->jwt = $jwt;
+        return $this;
+    }
 
+    public function setVerificationToken(string $verification_token): static {
+        $this->verification_token = $verification_token;
         return $this;
     }
 
@@ -252,18 +254,16 @@ class RingCentral {
         return $this->get('/subscription')->collect('records');
     }
 
-    public function createWebhook(array $filters, int $expiresIn, string $address, ?string $verificationToken = null): Response {
+    public function createWebhook(array $filters, int $expiresIn, string $address): Response {
         $data = [
             'eventFilters' => $filters,
             'expiresIn' => $expiresIn,
             'deliveryMode' => [
                 'transportType' => 'WebHook',
                 'address' => $address,
+                'verificationToken' => $this->verification_token,
             ],
         ];
-        if ($verificationToken) {
-            $data['deliveryMode']['verificationToken'] = $verificationToken;
-        }
         return $this->post('/subscription', $data);
     }
 
