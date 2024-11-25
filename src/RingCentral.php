@@ -261,9 +261,11 @@ class RingCentral {
             'deliveryMode' => [
                 'transportType' => 'WebHook',
                 'address' => $address,
-                'verificationToken' => $this->verification_token,
             ],
         ];
+        if ($this->verification_token) {
+            $data['deliveryMode']['verificationToken'] = $this->verification_token;
+        }
         return $this->post('/subscription', $data);
     }
 
