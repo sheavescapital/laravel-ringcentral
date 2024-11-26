@@ -210,6 +210,11 @@ class RingCentral {
         return $this->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
     }
 
+    public function getCallLog(string $id): Collection {
+        $r = $this->get("/account/~/call-log/{$id}");
+        return $r->collect();
+    }
+
     public function getCallLogs(?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
         $data = [
             'type' => 'Voice',
