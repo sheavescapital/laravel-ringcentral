@@ -27,6 +27,8 @@ class RingCentral {
     protected string $verification_token;
     protected string $loggedInExtension;
     protected string $loggedInExtensionId;
+    protected ?Collection $extensionMap = null;
+    protected ?Collection $phoneMap = null;
 
     public function setClientId(string $clientId): static {
         $this->clientId = $clientId;
@@ -174,13 +176,39 @@ class RingCentral {
         return $r->collect('records');
     }
 
-    public function getExtensionMap(): Collection {
+    protected function generateExtensionMap(): Collection {
         return Cache::flexible('ringcentral_extension_map', [86400, 259200], function () {
             return RingCentral::getExtensions()
                 ->mapWithKeys(function (array $extension) {
                     return [$extension['id'] => $extension['contact']['email']];
                 });
         });
+    }
+
+    public function getExtensionMap(): Collection {
+        return $this->extensionMap = $this->extensionMap ?? $this->generateExtensionMap();
+    }
+
+    public function getPhoneNumbers(): Collection {
+        return $this->get('/account/~/phone-number')->collect('records');
+    }
+
+    protected function generatePhoneNumberMap(): Collection {
+        return Cache::flexible('ringcentral_phone_map', [86400, 259200], function () {
+            return RingCentral::getPhoneNumbers()->mapWithKeys(function ($record) {
+                return isset($record['extension'])
+                  ? [
+                      $record['phoneNumber'] => RingCentral::getExtensionMap()[
+                        $record['extension']['id']
+                      ],
+                  ]
+                  : null;
+            });
+        });
+    }
+
+    public function getPhoneNumberMap(): Collection {
+        return $this->phoneMap = $this->phoneMap ?? $this->generatePhoneNumberMap();
     }
 
     protected function getMessages(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
@@ -200,10 +228,6 @@ class RingCentral {
 
     public function getMessagesForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
         return $this->getMessages($extensionId, $fromDate, $toDate, $perPage);
-    }
-
-    public function getPhoneNumbers(): Collection {
-        return $this->get('/account/~/phone-number')->collect('records');
     }
 
     public function getMessageAttachmentById(string $extensionId, string $messageId, string $attachementId): Response {
