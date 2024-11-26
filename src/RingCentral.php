@@ -189,7 +189,7 @@ class RingCentral {
             'perPage' => $perPage,
         ];
         if ($fromDate) {
-            $dtat['dateFrom'] = $fromDate->toIso8601String();
+            $data['dateFrom'] = $fromDate->toIso8601String();
         }
         if ($toDate) {
             $data['dateTo'] = $toDate->toIso8601String();
@@ -210,12 +210,7 @@ class RingCentral {
         return $this->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
     }
 
-    public function getCallLog(string $id): Collection {
-        $r = $this->get("/account/~/call-log/{$id}");
-        return $r->collect();
-    }
-
-    public function getCallLogs(?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
+    public function getCallLogs(?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100, ?string $sessionId = null): Collection {
         $data = [
             'type' => 'Voice',
             'perPage' => $perPage,
@@ -224,10 +219,13 @@ class RingCentral {
             $data['dateFrom'] = $fromDate->toIso8601String();
         }
         if ($toDate) {
-            $dtat['dateTo'] = $toDate->toIso8601String();
+            $data['dateTo'] = $toDate->toIso8601String();
         }
         if ($withRecording) {
-            $dtat['recordingType'] = 'All';
+            $data['recordingType'] = 'All';
+        }
+        if ($sessionId) {
+            $data['sessionId'] = $sessionId;
         }
         $r = $this->get('/account/~/call-log', $data);
         return $r->collect('records');
@@ -242,10 +240,10 @@ class RingCentral {
             $data['dateFrom'] = $fromDate->toIso8601String();
         }
         if ($toDate) {
-            $dtat['dateTo'] = $toDate->toIso8601String();
+            $data['dateTo'] = $toDate->toIso8601String();
         }
         if ($withRecording) {
-            $dtat['recordingType'] = 'All';
+            $data['recordingType'] = 'All';
         }
         $r = $this->get('/account/~/extension/'.$extensionId.'/call-log', $data);
         return $r->collect('records');
