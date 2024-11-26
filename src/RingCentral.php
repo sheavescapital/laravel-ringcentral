@@ -316,13 +316,13 @@ class RingCentral {
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
         $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
         return fluent([
-            'sessionId' => $sessionId,
+            'session_id' => $sessionId,
             'timestamp' => $timestamp,
             'direction' => $direction,
-            'extensionId' => $extensionId,
-            'extensionEmail' => $extensionEmail,
-            'recordingId' => $recordingId,
-            'externalPhoneNumber' => $externalPhoneNumber,
+            'extension_id' => $extensionId,
+            'extension_email' => $extensionEmail,
+            'recording_id' => $recordingId,
+            'external_phone_number' => $externalPhoneNumber,
         ]);
     }
 
@@ -342,13 +342,13 @@ class RingCentral {
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
         $externalPhoneNumber = Str::ltrim($record->get("{$externalKey}.phoneNumber"), '+1');
         return fluent([
-            'sessionId' => $sessionId,
+            'session_id' => $sessionId,
             'timestamp' => $timestamp,
             'direction' => $direction,
-            'extensionId' => $extensionId,
-            'extensionEmail' => $extensionEmail,
-            'recordingId' => $recordingId,
-            'externalPhoneNumber' => $externalPhoneNumber,
+            'extension_id' => $extensionId,
+            'extension_email' => $extensionEmail,
+            'recording_id' => $recordingId,
+            'external_phone_number' => $externalPhoneNumber,
         ]);
     }
 }
