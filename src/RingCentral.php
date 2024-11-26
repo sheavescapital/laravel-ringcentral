@@ -286,6 +286,7 @@ class RingCentral {
     }
 
     public function parseWebhookBody(Request $request): Fluent {
+        $sessionId = $request->input('body.sessionId');
         $timestamp = $request->date('timestamp');
         $direction = $request->enum('body.parties.0.direction', CallDirection::class);
         $extensionId = $request->input('body.parties.0.extensionId');
@@ -294,6 +295,28 @@ class RingCentral {
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
         $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
         return fluent([
+            'sessionId' => $sessionId,
+            'timestamp' => $timestamp,
+            'direction' => $direction,
+            'extensionId' => $extensionId,
+            'extensionEmail' => $extensionEmail,
+            'recordingId' => $recordingId,
+            'externalPhoneNumber' => $externalPhoneNumber,
+        ]);
+    }
+
+    public function parseCallRecordArray(array $record): Fluent {
+        $record = new Fluent($record);
+        $sessionId = $record->get('sessionId');
+        $timestamp = Carbon::parse($record['startTime']);
+        $direction = CallDirection::from($record->get('direction'));
+        $extensionId = $record->get('extension.id');
+        $extensionEmail = $this->getExtensionMap()->get($extensionId);
+        $recordingId = $record->get('recording.id');
+        $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
+        $externalPhoneNumber = Str::ltrim($record->get("{$externalKey}.phoneNumber"), '+1');
+        return fluent([
+            'sessionId' => $sessionId,
             'timestamp' => $timestamp,
             'direction' => $direction,
             'extensionId' => $extensionId,
