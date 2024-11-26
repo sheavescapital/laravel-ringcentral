@@ -50,10 +50,6 @@ class RingCentral {
         return $this;
     }
 
-    protected static function errorHandler(Response $response): void {
-        throw new \Exception($response->json('message'), $response->status());
-    }
-
     protected function login(): string {
         $response = Http::asForm()
             ->acceptJson()
@@ -64,7 +60,7 @@ class RingCentral {
                 'access_token_ttl' => self::ACCESS_TOKEN_TTL,
                 'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
             ]);
-        $response->onError($this->errorHandler(...));
+        $response->throw();
         $access_token = $response->json('access_token');
         Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
         Cache::put('ringcentral_refresh_token', $response->json('refresh_token'), $response->json('refresh_token_expires_in'));
@@ -81,7 +77,7 @@ class RingCentral {
                 'access_token_ttl' => self::ACCESS_TOKEN_TTL,
                 'refresh_token_ttl' => self::REFRESH_TOKEN_TTL,
             ]);
-        $response->onError($this->errorHandler(...));
+        $response->throw();
         $access_token = $response->json('access_token');
         Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
         return $access_token;
@@ -108,7 +104,7 @@ class RingCentral {
                 $prependPath ? $this->prependPath($url) : $url,
                 $query
             );
-        $response->onError($this->errorHandler(...));
+        $response->throw();
         return $response;
     }
 
@@ -119,7 +115,7 @@ class RingCentral {
                 $prependPath ? $this->prependPath($url) : $url,
                 $body
             );
-        $response->onError($this->errorHandler(...));
+        $response->throw();
         return $response;
     }
 
@@ -130,7 +126,7 @@ class RingCentral {
                 $prependPath ? $this->prependPath($url) : $url,
                 $query
             );
-        $response->onError($this->errorHandler(...));
+        $response->throw();
         return $response;
     }
 
