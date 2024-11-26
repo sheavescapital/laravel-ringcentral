@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use SheavesCapital\RingCentral\Enums\CallDirection;
 use SheavesCapital\RingCentral\Exceptions\CouldNotSendMessage;
 
 class RingCentral {
@@ -272,5 +273,21 @@ class RingCentral {
 
     public function validateWebhook(Request $request): bool {
         return $request->header('Validation-Token') == $this->verification_token;
+    }
+
+    public function parseWebhookBody(Request $request): Collection {
+        $timestamp = $request->date('timestamp');
+        $direction = $request->enum('body.parties.0.direction', CallDirection::class);
+        $extensionId = $request->input('body.parties.0.extensionId');
+        $recordingId = $request->input('body.parties.0.recordings.id');
+        $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
+        $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
+        return collect([
+            'timestamp' => $timestamp,
+            'direction' => $direction,
+            'extensionId' => $extensionId,
+            'recordingId' => $recordingId,
+            'externalPhoneNumber' => $externalPhoneNumber,
+        ]);
     }
 }
