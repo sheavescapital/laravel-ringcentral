@@ -3,6 +3,7 @@
 namespace SheavesCapital\RingCentral;
 
 use Illuminate\Http\Client\Response;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -267,5 +268,9 @@ class RingCentral {
 
     public function deleteWebhook(string $webhookId): Response {
         return $this->delete("/subscription/{$webhookId}");
+    }
+
+    public function validateWebhook(Request $request): bool {
+        return $request->header('Validation-Token') == $this->verification_token;
     }
 }
