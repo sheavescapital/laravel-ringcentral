@@ -173,6 +173,15 @@ class RingCentral {
         return $r->collect('records');
     }
 
+    protected function getExtensionMap(): Collection {
+        return Cache::flexible('ringcentral_extension_map', [86400, 259200], function () {
+            return RingCentral::getExtensions()
+                ->mapWithKeys(function (array $extension) {
+                    return [$extension['id'] => $extension['contact']['email']];
+                });
+        });
+    }
+
     protected function getMessages(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
         $data = [
             'messageType' => 'SMS',
@@ -279,6 +288,7 @@ class RingCentral {
         $timestamp = $request->date('timestamp');
         $direction = $request->enum('body.parties.0.direction', CallDirection::class);
         $extensionId = $request->input('body.parties.0.extensionId');
+        $extensionEmail = $this->getExtensionMap()->get($extensionId);
         $recordingId = $request->input('body.parties.0.recordings.id');
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
         $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
@@ -286,6 +296,7 @@ class RingCentral {
             'timestamp' => $timestamp,
             'direction' => $direction,
             'extensionId' => $extensionId,
+            'extensionEmail' => $extensionEmail,
             'recordingId' => $recordingId,
             'externalPhoneNumber' => $externalPhoneNumber,
         ]);
