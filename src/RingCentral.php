@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Fluent;
 use Illuminate\Support\Str;
 use SheavesCapital\RingCentral\Enums\CallDirection;
 use SheavesCapital\RingCentral\Exceptions\CouldNotSendMessage;
@@ -173,7 +174,7 @@ class RingCentral {
         return $r->collect('records');
     }
 
-    protected function getExtensionMap(): Collection {
+    public function getExtensionMap(): Collection {
         return Cache::flexible('ringcentral_extension_map', [86400, 259200], function () {
             return RingCentral::getExtensions()
                 ->mapWithKeys(function (array $extension) {
@@ -284,7 +285,7 @@ class RingCentral {
         return $request->header('verification-token') == $this->verification_token;
     }
 
-    public function parseWebhookBody(Request $request): Collection {
+    public function parseWebhookBody(Request $request): Fluent {
         $timestamp = $request->date('timestamp');
         $direction = $request->enum('body.parties.0.direction', CallDirection::class);
         $extensionId = $request->input('body.parties.0.extensionId');
@@ -292,7 +293,7 @@ class RingCentral {
         $recordingId = $request->input('body.parties.0.recordings.id');
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
         $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
-        return collect([
+        return fluent([
             'timestamp' => $timestamp,
             'direction' => $direction,
             'extensionId' => $extensionId,
