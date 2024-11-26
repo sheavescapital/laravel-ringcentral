@@ -280,8 +280,8 @@ class RingCentral {
         return $this->delete("/subscription/{$webhookId}");
     }
 
-    public function validateWebhook(Request $request): bool {
-        return $request->header('Validation-Token') == $this->verification_token;
+    public function verifyWebhook(Request $request): bool {
+        return $request->header('verification-token') == $this->verification_token;
     }
 
     public function parseWebhookBody(Request $request): Collection {
