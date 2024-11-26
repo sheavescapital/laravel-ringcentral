@@ -196,13 +196,7 @@ class RingCentral {
     protected function generatePhoneNumberMap(): Collection {
         return Cache::flexible('ringcentral_phone_map', [86400, 259200], function () {
             return RingCentral::getPhoneNumbers()->mapWithKeys(function ($record) {
-                return isset($record['extension'])
-                  ? [
-                      $record['phoneNumber'] => RingCentral::getExtensionMap()[
-                        $record['extension']['id']
-                      ],
-                  ]
-                  : null;
+                return isset($record['extension']) ? [$record['phoneNumber'] => $record['extension']['id']] : null;
             });
         });
     }
@@ -338,6 +332,11 @@ class RingCentral {
         $timestamp = Carbon::parse($record['startTime']);
         $direction = CallDirection::from($record->get('direction'));
         $extensionId = $record->get('extension.id');
+        if ($extensionId == null) {
+            $internalKey = $direction == CallDirection::INBOUND ? 'to' : 'from';
+            $internalPhone = $record->get("{$internalKey}.phoneNumber");
+            $extensionId = $this->getPhoneNumberMap()->get($internalPhone);
+        }
         $extensionEmail = $this->getExtensionMap()->get($extensionId);
         $recordingId = $record->get('recording.id');
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
