@@ -284,6 +284,16 @@ class RingCentral {
         return $this->get('/subscription')->collect('records');
     }
 
+    public function renewWebhook(string $id): Collection {
+        return $this->post("/subscription/{$id}/renew")->collect();
+    }
+
+    public function renewExpiringWebhooks(int $seconds): collection {
+        return RingCentral::listWebhooks()
+            ->where('expiresIn', '<', $seconds)
+            ->map(fn (array $webhook) => RingCentral::renewWebhook($webhook['id']));
+    }
+
     public function createWebhook(array $filters, int $expiresIn, string $address): Response {
         $data = [
             'eventFilters' => $filters,
