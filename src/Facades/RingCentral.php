@@ -28,6 +28,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Http\Client\Response getRecordingById(string $recordingId)
  * @method static string|false saveRecordingById(string $recordingId, string|null $disk = null, string $path = '')
  * @method static \Illuminate\Support\Collection listWebhooks()
+ * @method static \Illuminate\Support\Collection renewWebhook(string $id)
+ * @method static \Illuminate\Support\Collection renewExpiringWebhooks(int $seconds)
  * @method static \Illuminate\Http\Client\Response createWebhook(array $filters, int $expiresIn, string $address)
  * @method static \Illuminate\Http\Client\Response deleteWebhook(string $webhookId)
  * @method static bool verifyWebhook(\Illuminate\Http\Request $request)
