@@ -18,6 +18,7 @@
         "laravel/framework": "^11.0"
     },
     "require-dev": {
+        "laravel/facade-documenter": "dev-main",
         "laravel/pint": "^1.18",
         "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0",
         "phpstan/extension-installer": "^1.4",
@@ -57,5 +58,11 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": {
+        "facade-documenter": {
+            "type": "vcs",
+            "url": "git@github.com:laravel/facade-documenter.git"
+        }
+    }
 }
