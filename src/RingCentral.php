@@ -313,7 +313,7 @@ class RingCentral {
         $direction = $request->enum('body.parties.0.direction', CallDirection::class);
         $extensionId = $request->input('body.parties.0.extensionId');
         $extensionEmail = $this->getExtensionMap()->get($extensionId);
-        $recordingId = $request->input('body.parties.0.recordings.id');
+        $recordingId = $request->input('body.parties.0.recordings.0.id');
         $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
         $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
         return fluent([
