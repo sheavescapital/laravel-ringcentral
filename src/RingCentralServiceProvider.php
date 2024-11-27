@@ -13,6 +13,10 @@ class RingCentralServiceProvider extends ServiceProvider {
             $this->publishes([
                 __DIR__.'/../config/ringcentral.php' => config_path('ringcentral.php'),
             ], 'config');
+            $this->commands([
+                Commands\RecordingWebhook::class,
+                Commands\RenewWebhooks::class,
+            ]);
         }
     }
 
