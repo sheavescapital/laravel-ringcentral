@@ -15,14 +15,14 @@
 
     "require": {
         "php": "^8.0",
-        "laravel/framework": "^11.0"
+        "laravel/framework": "^11.0|^12.0"
     },
     "require-dev": {
         "laravel/facade-documenter": "dev-main",
         "laravel/pint": "^1.18",
-        "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0",
+        "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0|^10.0",
         "phpstan/extension-installer": "^1.4",
-        "phpunit/phpunit": "^9.3.0|^10.0",
+        "phpunit/phpunit": "^9.3.0|^10.0|^11.0",
         "vlucas/phpdotenv": "^5.3"
     },
     "autoload": {
