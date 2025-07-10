@@ -181,8 +181,9 @@ class RingCentral {
         return Cache::flexible('ringcentral_extension_map', [86400, 259200], function () {
             return RingCentral::getExtensions()
                 ->mapWithKeys(function (array $extension) {
-                    return [$extension['id'] => $extension['contact']['email']];
-                });
+                    return [$extension['id'] => $extension['contact']['email'] ?? null];
+                })
+                ->filter();
         });
     }
 
