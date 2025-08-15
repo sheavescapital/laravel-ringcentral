@@ -34,7 +34,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Http\Client\Response createWebhook(array $filters, int $expiresIn, string $address)
  * @method static \Illuminate\Http\Client\Response deleteWebhook(string $webhookId)
  * @method static bool verifyWebhook(\Illuminate\Http\Request $request)
- * @method static \Illuminate\Support\Fluent parseWebhookBody(\Illuminate\Http\Request $request)
+ * @method static \Illuminate\Support\Fluent parseAnsweredWebhookBody(\Illuminate\Http\Request $request)
+ * @method static \Illuminate\Support\Fluent parseRecordingWebhookBody(\Illuminate\Http\Request $request)
  * @method static \Illuminate\Support\Fluent parseCallRecordArray(array $record)
  *
  * @see \SheavesCapital\RingCentral\RingCentral
