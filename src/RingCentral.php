@@ -318,7 +318,7 @@ class RingCentral {
         return $request->header('verification-token') == $this->verification_token;
     }
 
-    public function parseWebhookBody(Request $request): Fluent {
+    public function parseRecordingWebhookBody(Request $request): Fluent {
         $sessionId = $request->input('body.sessionId');
         $timestamp = $request->date('timestamp');
         $direction = $request->enum('body.parties.0.direction', CallDirection::class);
