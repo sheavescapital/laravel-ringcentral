@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Support\Collection getCallLogsForExtensionId(string $extensionId, \Illuminate\Support\Carbon|null $fromDate = null, \Illuminate\Support\Carbon|null $toDate = null, bool $withRecording = true, int|null $perPage = 100)
  * @method static \Illuminate\Http\Client\Response getRecordingById(string $recordingId)
  * @method static string|false saveRecordingById(string $recordingId, string|null $disk = null, string $path = '')
+ * @method static \Illuminate\Http\Client\Response transferToExtension(string $telephonySessionId, string $partyId, string $extension)
  * @method static \Illuminate\Support\Collection listWebhooks()
  * @method static \Illuminate\Support\Collection renewWebhook(string $id)
  * @method static \Illuminate\Support\Collection renewExpiringWebhooks(int $seconds)

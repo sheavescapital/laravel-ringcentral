@@ -281,6 +281,10 @@ class RingCentral {
         return $result ? $path : false;
     }
 
+    public function transferToExtension(string $telephonySessionId, string $partyId, string $extension): Response {
+        return $this->post("/account/~/telephony/sessions/{$telephonySessionId}/parties/{$partyId}/transfer", ['extensionNumber' => $extension]);
+    }
+
     public function listWebhooks(): Collection {
         return $this->get('/subscription')->collect('records');
     }
@@ -316,6 +320,28 @@ class RingCentral {
 
     public function verifyWebhook(Request $request): bool {
         return $request->header('verification-token') == $this->verification_token;
+    }
+
+    public function parseAnsweredWebhookBody(Request $request): Fluent {
+        $sessionId = $request->input('body.sessionId');
+        $timestamp = $request->date('timestamp');
+        $extensionId = $request->input('body.parties.0.extensionId');
+        $extensionEmail = $this->getExtensionMap()->get($extensionId);
+        $direction = $request->enum('body.parties.0.direction', CallDirection::class);
+        $externalKey = $direction == CallDirection::INBOUND ? 'from' : 'to';
+        $externalPhoneNumber = $request->string("body.parties.0.{$externalKey}.phoneNumber")->ltrim('+1');
+        $telephonySessionId = $request->input('body.telephonySessionId');
+        $partyId = $request->input('body.parties.0.id');
+        return fluent([
+            'session_id' => $sessionId,
+            'timestamp' => $timestamp,
+            'direction' => $direction,
+            'extension_id' => $extensionId,
+            'extension_email' => $extensionEmail,
+            'external_phone_number' => $externalPhoneNumber,
+            'telephony_session_id' => $telephonySessionId,
+            'party_id' => $partyId,
+        ]);
     }
 
     public function parseRecordingWebhookBody(Request $request): Fluent {
