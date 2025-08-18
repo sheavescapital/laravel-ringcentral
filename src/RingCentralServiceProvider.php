@@ -14,6 +14,7 @@ class RingCentralServiceProvider extends ServiceProvider {
                 __DIR__.'/../config/ringcentral.php' => config_path('ringcentral.php'),
             ], 'config');
             $this->commands([
+                Commands\AnsweredWebhook::class,
                 Commands\RecordingWebhook::class,
                 Commands\RenewWebhooks::class,
             ]);
