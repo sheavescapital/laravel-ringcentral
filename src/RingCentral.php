@@ -2,6 +2,7 @@
 
 namespace SheavesCapital\RingCentral;
 
+use Carbon\CarbonInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -207,7 +208,7 @@ class RingCentral {
         return $this->phoneMap = $this->phoneMap ?? $this->generatePhoneNumberMap();
     }
 
-    protected function getMessages(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
+    protected function getMessages(string $extensionId, ?CarbonInterface $fromDate = null, ?CarbonInterface $toDate = null, ?int $perPage = 100): Collection {
         $data = [
             'messageType' => 'SMS',
             'perPage' => $perPage,
@@ -222,7 +223,7 @@ class RingCentral {
         return $r->collect('records');
     }
 
-    public function getMessagesForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, ?int $perPage = 100): Collection {
+    public function getMessagesForExtensionId(string $extensionId, ?CarbonInterface $fromDate = null, ?CarbonInterface $toDate = null, ?int $perPage = 100): Collection {
         return $this->getMessages($extensionId, $fromDate, $toDate, $perPage);
     }
 
@@ -230,7 +231,7 @@ class RingCentral {
         return $this->get('/account/~/extension/'.$extensionId.'/message-store/'.$messageId.'/content/'.$attachementId);
     }
 
-    public function getCallLogs(?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100, ?string $sessionId = null): Collection {
+    public function getCallLogs(?CarbonInterface $fromDate = null, ?CarbonInterface $toDate = null, bool $withRecording = true, ?int $perPage = 100, ?string $sessionId = null): Collection {
         $data = [
             'type' => 'Voice',
             'perPage' => $perPage,
@@ -251,7 +252,7 @@ class RingCentral {
         return $r->collect('records');
     }
 
-    public function getCallLogsForExtensionId(string $extensionId, ?Carbon $fromDate = null, ?Carbon $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
+    public function getCallLogsForExtensionId(string $extensionId, ?CarbonInterface $fromDate = null, ?CarbonInterface $toDate = null, bool $withRecording = true, ?int $perPage = 100): Collection {
         $data = [
             'type' => 'Voice',
             'perPage' => $perPage,
@@ -293,7 +294,7 @@ class RingCentral {
         return $this->post("/subscription/{$id}/renew")->collect();
     }
 
-    public function renewExpiringWebhooks(int $seconds): collection {
+    public function renewExpiringWebhooks(int $seconds): Collection {
         return RingCentral::listWebhooks()
             ->where('expiresIn', '<', $seconds)
             ->map(fn (array $webhook) => RingCentral::renewWebhook($webhook['id']));
