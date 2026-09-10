@@ -68,8 +68,8 @@ class RingCentral {
             ]);
         $response->throw();
         $access_token = $response->json('access_token');
-        Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
-        Cache::put('ringcentral_refresh_token', $response->json('refresh_token'), $response->json('refresh_token_expires_in'));
+        Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in') - 60);
+        Cache::put('ringcentral_refresh_token', $response->json('refresh_token'), $response->json('refresh_token_expires_in') - 60);
         return $access_token;
     }
 
@@ -85,8 +85,8 @@ class RingCentral {
             ]);
         $response->throw();
         $access_token = $response->json('access_token');
-        Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in'));
-        Cache::put('ringcentral_refresh_token', $response->json('refresh_token'), $response->json('refresh_token_expires_in'));
+        Cache::put('ringcentral_access_token', $access_token, $response->json('expires_in') - 60);
+        Cache::put('ringcentral_refresh_token', $response->json('refresh_token'), $response->json('refresh_token_expires_in') - 60);
         return $access_token;
     }
 
